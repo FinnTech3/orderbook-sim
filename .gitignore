@@ -1,0 +1,33 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+.env.local
+.venv/
+venv/
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+dist/
+build/
+target/
+*.egg-info/
+__pycache__/
+*.py[cod]
+
+# Logs
+*.log
+npm-debug.log*
+
+# Reference material — read, never committed
+reference/
