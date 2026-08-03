@@ -84,6 +84,25 @@ def test_trade_never_empties_a_side():
         assert venue.best_bid < venue.best_ask
 
 
+def test_book_keeps_its_depth_over_a_long_run():
+    """Regression: the book used to drain to one level per side.
+
+    Trades remove levels as well as the remove action does, so a fixed
+    add/remove split loses depth steadily. After a few thousand events the
+    book was a single price on each side, which made every depth metric
+    meaningless and the demo look like a dead market.
+    """
+    venue = SyntheticVenue(seed=12, depth=8)
+    for _ in range(20_000):
+        venue.step()
+
+    assert len(venue.true_bids()) >= 4
+    assert len(venue.true_asks()) >= 4
+    # And it must not run away in the other direction either.
+    assert len(venue.true_bids()) <= 40
+    assert len(venue.true_asks()) <= 40
+
+
 def test_same_seed_produces_an_identical_stream():
     left = [s.delta for s in SyntheticVenue(seed=7).stream(500)]
     right = [s.delta for s in SyntheticVenue(seed=7).stream(500)]

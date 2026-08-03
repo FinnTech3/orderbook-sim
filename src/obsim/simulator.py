@@ -93,6 +93,8 @@ class SimStats:
     aggressive_fills: int = 0
     #: Fills granted because the market printed through our price.
     trade_through_fills: int = 0
+    #: Resting orders abandoned because the feed lost synchronisation.
+    orders_dropped_on_desync: int = 0
 
     @property
     def fill_ratio(self) -> float:
@@ -178,27 +180,53 @@ class Simulator:
 
     # ---- market events -----------------------------------------------
 
+    def pre_update(
+        self, now_ns: int, trades: tuple[Trade, ...] = ()
+    ) -> list[Fill]:
+        """Everything that must happen before the book moves.
+
+        Cancels retire, due orders go live against the book as it stands, and
+        trades work through the queue. Split out from :meth:`post_update` so
+        that something else — a :class:`~obsim.sequencing.Synchroniser` — can
+        own the book update in between.
+        """
+        produced: list[Fill] = []
+        self._retire_cancels(now_ns)
+        produced += self._activate_pending(now_ns)
+        produced += self._apply_trades(trades, now_ns)
+        self.fills += produced
+        return produced
+
+    def post_update(self) -> None:
+        """Reconcile tracked queue positions against the updated book."""
+        self._reconcile_queues()
+        self._reap()
+
+    def on_desync(self) -> None:
+        """Abandon resting orders because the book can no longer be trusted.
+
+        After a sequence gap the book is rebuilt from a fresh snapshot, and
+        there is no way to know what happened to the queue in between. Keeping
+        the old positions would be inventing information, so the orders are
+        dropped instead. A live system would have to reconcile against the
+        venue's own view here; a backtest cannot, and should not pretend to.
+        """
+        for order in self.orders.values():
+            if order.state in _WORKING:
+                order.state = OrderState.CANCELLED
+                self.stats.orders_cancelled += 1
+                self.stats.orders_dropped_on_desync += 1
+
     def on_market_event(
         self, delta: DepthDelta, trades: tuple[Trade, ...] = ()
     ) -> list[Fill]:
-        """Process one market event and return any fills it produced.
+        """Process one market event, applying the delta directly.
 
-        Sequence matters: cancels retire, due orders go live, trades work
-        through the queue, the book moves, and finally each order's tracked
-        queue is reconciled against the level the venue now reports.
+        The standalone path, for when no synchroniser is involved.
         """
-        now = delta.event_time_ns
-        produced: list[Fill] = []
-
-        self._retire_cancels(now)
-        produced += self._activate_pending(now)
-        produced += self._apply_trades(trades, now)
-
+        produced = self.pre_update(delta.event_time_ns, trades)
         self.book.apply_delta(delta)
-
-        self._reconcile_queues()
-        self._reap()
-        self.fills += produced
+        self.post_update()
         return produced
 
     # ---- internals ---------------------------------------------------

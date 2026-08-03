@@ -36,9 +36,15 @@ class SyntheticVenue:
     """
 
     start_price: int = 10_000
+    #: Target number of levels per side. The step mix pulls the book back
+    #: toward this rather than letting it drain or pile up without bound.
     depth: int = 8
     seed: int = 0
     max_size: int = 500
+    trade_rate: float = 0.15
+    #: Mean trade size. Deliberately far smaller than ``max_size`` — see the
+    #: note in :meth:`_trade`.
+    mean_trade: float = 12.0
 
     _rng: random.Random = field(init=False, repr=False)
     _bids: dict[int, int] = field(init=False, default_factory=dict, repr=False)
@@ -90,12 +96,25 @@ class SyntheticVenue:
         self._update_id += 1
         self._clock_ns += self._rng.randint(1_000_000, 50_000_000)
 
-        action = self._rng.random()
-        if action < 0.15:
+        if self._rng.random() < self.trade_rate:
             return self._trade()
-        if action < 0.35:
+
+        # Without this the book dies. Removals happen both here and as a side
+        # effect of trades clearing a level, so a fixed add/remove split drains
+        # depth until one level is left on each side. Biasing the split by how
+        # far the book is from its target depth makes it mean-revert instead.
+        thinnest = min(len(self._bids), len(self._asks))
+        if thinnest < self.depth:
+            add_bias = 0.75
+        elif thinnest > self.depth * 2:
+            add_bias = 0.15
+        else:
+            add_bias = 0.45
+
+        roll = self._rng.random()
+        if roll < add_bias:
             return self._add_level()
-        if action < 0.55:
+        if roll < add_bias + 0.25:
             return self._remove_level()
         return self._resize_level()
 
@@ -117,7 +136,13 @@ class SyntheticVenue:
         if len(levels) == 1 and resting == 1:
             return self._add_level()
 
-        filled = self._rng.randint(1, resting)
+        # Trade sizes are small relative to displayed depth, and drawn from a
+        # long tail. Sizing them uniformly over the level was wrong and not
+        # harmlessly so: when the average trade eats half the queue, position
+        # in that queue stops mattering and every fill model agrees. Real
+        # markets clear the touch in many small prints, which is exactly the
+        # regime where where-you-sit decides whether you fill.
+        filled = min(resting, max(1, int(self._rng.expovariate(1 / self.mean_trade))))
         remaining = resting - filled
         if remaining == 0 and len(levels) == 1:
             # Leave the touch standing. resting >= 2 here, so this is safe.
@@ -139,12 +164,17 @@ class SyntheticVenue:
         side = self._rng.choice((Side.BID, Side.ASK))
         if side is Side.BID:
             highest = self.best_ask - 1
-            price = self._rng.randint(max(1, highest - self.depth), highest)
+            candidates = range(max(1, highest - self.depth), highest + 1)
             levels = self._bids
         else:
             lowest = self.best_bid + 1
-            price = self._rng.randint(lowest, lowest + self.depth)
+            candidates = range(lowest, lowest + self.depth + 1)
             levels = self._asks
+
+        # Prefer a price nobody is on, so this actually adds a level rather
+        # than quietly resizing an existing one.
+        vacant = [price for price in candidates if price not in levels]
+        price = self._rng.choice(vacant or list(candidates))
 
         size = self._rng.randint(1, self.max_size)
         self._write(levels, price, size)
