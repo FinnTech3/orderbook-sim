@@ -108,10 +108,15 @@ obsim bench --events 200000
 
 ```
   events        200,000
-  elapsed       0.531 s
-  rate          376,646 events/sec
-  per event     2.66 us
+  elapsed       0.509 s
+  rate          393,302 events/sec
+  per event     2.54 us
 ```
+
+That is CPython with no extensions, on one core, doing the sequencing checks
+as well as the book updates. It is not fast in absolute terms — a C++ book
+does this in tens of nanoseconds — but it is fast enough that reconstruction
+is never the bottleneck when replaying a day of data.
 
 Run the tests:
 
