@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from .feeds import SyntheticVenue
 from .metrics import imbalance, slippage_ticks, spread_bps
-from .queue_model import ALL_MODELS, by_name
+from .queue_model import ALL_MODELS
 from .replay import Replay
 from .types import Instrument, Side
 
@@ -70,17 +70,24 @@ def cmd_demo(args: argparse.Namespace) -> int:
 
     book = replay.book
     print(f"Reconstructed {args.events} events from seed {args.seed}\n")
-    print(f"  best bid      {book.best_bid}")
-    print(f"  best ask      {book.best_ask}")
-    print(f"  spread        {book.spread} ticks")
-    spread = spread_bps(book)
-    print(f"  spread (bps)  {spread:.2f}" if spread is not None else "")
-    print(f"  mid           {book.mid}")
-    print(f"  microprice    {book.microprice:.3f}")
-    skew = imbalance(book, depth=5)
-    print(f"  imbalance(5)  {skew:+.3f}" if skew is not None else "")
-    cost = slippage_ticks(book, Side.ASK, 100)
-    print(f"  slip to buy   {cost:.3f} ticks" if cost is not None else "")
+
+    # Every one of these is None when a side of the book is empty, which is a
+    # legitimate state for a thin market. Formatting None with a precision
+    # spec raises, so it goes through here rather than into an f-string.
+    def line(label: str, value, spec: str = "", suffix: str = "") -> None:
+        if value is None:
+            print(f"  {label:<14}-")
+        else:
+            print(f"  {label:<14}{value:{spec}}{suffix}")
+
+    line("best bid", book.best_bid)
+    line("best ask", book.best_ask)
+    line("spread", book.spread, suffix=" ticks")
+    line("spread (bps)", spread_bps(book), ".2f")
+    line("mid", book.mid)
+    line("microprice", book.microprice, ".3f")
+    line("imbalance(5)", imbalance(book, depth=5), "+.3f")
+    line("slip to buy", slippage_ticks(book, Side.ASK, 100), ".3f", " ticks")
 
     print(f"\n  bid levels    {len(book.bids)}")
     print(f"  ask levels    {len(book.asks)}")
@@ -199,8 +206,6 @@ def main(argv: list[str] | None = None) -> int:
     bench.set_defaults(func=cmd_bench)
 
     args = parser.parse_args(argv)
-    if args.command != "sweep" and getattr(args, "model", None):
-        by_name(args.model)
     return int(args.func(args))
 
 
