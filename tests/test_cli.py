@@ -40,6 +40,31 @@ def test_bench_reports_a_rate(capsys):
     assert "events/sec" in out
 
 
+def test_queue_models_still_disagree():
+    """The core demonstration, guarded.
+
+    Every other test checks a component in isolation, and all of them would
+    still pass if a refactor made the three queue models produce identical
+    fills — at which point the project's entire claim would be silently dead.
+    This asserts the range is real: optimistic must fill more than pessimistic
+    on the same stream.
+    """
+    from obsim.cli import _run
+    from obsim.queue_model import OptimisticQueue, PessimisticQueue
+
+    common = dict(
+        seed=1, events=12_000, order_latency_ns=0,
+        quote_size=10, hold=40, offset=0,
+    )
+    low = _run(PessimisticQueue(), **common).sim.stats.fill_ratio
+    high = _run(OptimisticQueue(), **common).sim.stats.fill_ratio
+
+    assert high > low, (
+        f"queue models agree (both {low:.3%}) — the assumption is no longer "
+        f"changing the outcome, so the demonstration is broken"
+    )
+
+
 def test_no_subcommand_is_an_error():
     with pytest.raises(SystemExit):
         main([])

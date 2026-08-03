@@ -1,0 +1,50 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Check the demo reconstructs correctly
+        # Exits non-zero if the rebuilt book does not match the venue's own,
+        # so a reconstruction regression fails CI rather than printing "NO".
+        run: obsim demo --events 20000
+
+      - name: Show the queue model range
+        # Guarded by a test as well; printed here so the range is visible in
+        # the build log without cloning anything.
+        run: obsim sweep --events 20000
+
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Level container benchmark
+        run: python benchmarks/bench_levels.py

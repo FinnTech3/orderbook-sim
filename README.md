@@ -1,5 +1,7 @@
 # orderbook-sim
 
+[![tests](https://github.com/FinnTech3/orderbook-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/FinnTech3/orderbook-sim/actions/workflows/ci.yml)
+
 Rebuilds what an exchange's order book looked like at any moment in the past,
 then lets you test whether an order you *would* have placed would actually have
 been filled.
@@ -114,7 +116,7 @@ obsim bench --events 200000
 Run the tests:
 
 ```sh
-pytest          # 101 tests
+pytest          # 110 tests
 ```
 
 ## How it works
@@ -254,7 +256,7 @@ point. A backtest cannot, and should not pretend to.
 
 ## Testing
 
-101 tests, in three kinds.
+110 tests, in three kinds.
 
 **Differential.** The level container is checked against a deliberately naive
 implementation that sorts on every read, over 20,000 random operations. They
