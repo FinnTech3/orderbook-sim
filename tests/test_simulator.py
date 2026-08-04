@@ -334,3 +334,62 @@ def test_stats_round_trip_to_a_dict():
     stats = sim.stats.as_dict()
     assert stats["lots_filled"] == 10
     assert stats["fill_ratio"] == 1.0
+
+
+# ---- marketable orders that cross several levels ------------------------
+
+
+def test_a_marketable_order_sweeps_every_level_it_reaches():
+    """Regression: it used to take the touch and rest the remainder.
+
+    A limit buy at 105 into asks of 5 at 101, 5 at 102 and 5 at 103 should
+    fill all fifteen. Taking only the touch filled five and left ten resting
+    at 105 — a bid above live asks, which cannot exist in a real book.
+    """
+    sim = make_sim(asks=((101, 5), (102, 5), (103, 5)))
+    order = sim.submit(Side.BID, 105, 15, now_ns=0)
+    fills = sim.on_market_event(evt(1, bids=[(100, 500)]))
+
+    assert order.filled == 15
+    assert order.state is OrderState.FILLED
+    assert [(f.size, f.price) for f in fills] == [(5, 101), (5, 102), (5, 103)]
+    assert all(f.aggressive for f in fills)
+
+
+def test_a_sweep_pays_worse_than_the_touch():
+    """The point of sweeping: size costs more than the best price suggests."""
+    sim = make_sim(asks=((101, 5), (102, 5), (103, 5)))
+    sim.submit(Side.BID, 105, 15, now_ns=0)
+    fills = sim.on_market_event(evt(1, bids=[(100, 500)]))
+
+    average = sum(f.price * f.size for f in fills) / sum(f.size for f in fills)
+    assert average == pytest.approx(102.0)
+    assert average > 101, "a sweep cannot average the touch price"
+
+
+def test_a_sweep_stops_at_its_own_limit():
+    sim = make_sim(asks=((101, 5), (102, 5), (110, 99)))
+    order = sim.submit(Side.BID, 102, 20, now_ns=0)
+    sim.on_market_event(evt(1, bids=[(100, 500)]))
+
+    assert order.filled == 10, "must not trade above its limit"
+    assert order.state is OrderState.RESTING
+    assert order.remaining == 10
+
+
+def test_an_ask_side_order_sweeps_downward():
+    sim = make_sim(bids=((100, 5), (99, 5), (98, 5)), asks=((101, 5),))
+    order = sim.submit(Side.ASK, 98, 15, now_ns=0)
+    fills = sim.on_market_event(evt(1, asks=[(101, 5)]))
+
+    assert order.filled == 15
+    assert [f.price for f in fills] == [100, 99, 98]
+
+
+def test_a_sweep_records_every_level_as_a_fill():
+    sim = make_sim(asks=((101, 5), (102, 5), (103, 5)))
+    sim.submit(Side.BID, 105, 15, now_ns=0)
+    sim.on_market_event(evt(1, bids=[(100, 500)]))
+
+    assert sim.stats.aggressive_fills == 3
+    assert sim.stats.lots_filled == 15

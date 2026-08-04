@@ -240,9 +240,7 @@ class Simulator:
             if now_ns < order.effective_ns:
                 continue
 
-            crossed = self._marketable_fill(order, now_ns)
-            if crossed is not None:
-                produced.append(crossed)
+            produced += self._marketable_fill(order, now_ns)
             if order.state is OrderState.PENDING:
                 self._rest(order)
         return produced
@@ -257,30 +255,57 @@ class Simulator:
         order.queue_behind = 0
         order.state = OrderState.RESTING
 
-    def _marketable_fill(self, order: Order, now_ns: int) -> Fill | None:
-        """Fill immediately if the order arrives crossing the spread."""
-        if order.side is Side.BID:
-            opposing = self.book.best_ask
-            crosses = opposing is not None and order.price >= opposing
-        else:
-            opposing = self.book.best_bid
-            crosses = opposing is not None and order.price <= opposing
-        if not crosses:
-            return None
+    def _marketable_fill(self, order: Order, now_ns: int) -> list[Fill]:
+        """Fill against every level the order's limit price reaches.
 
-        assert opposing is not None
-        available = self.book.size_at(order.side.opposite, opposing)
-        size = min(order.remaining, available)
-        if size <= 0:
-            return None
+        A limit order that crosses does not stop at the touch. It sweeps the
+        opposing side until it is filled or runs past its own limit, which is
+        why this walks levels rather than taking one.
 
-        order.filled += size
+        Taking only the touch left the remainder resting at the order's limit
+        price — a bid sitting above live asks, which cannot exist. A 15-lot
+        buy at 105 into asks of 5 at 101, 5 at 102 and 5 at 103 filled 5 and
+        left 10 resting at 105 with the best ask still 101.
+
+        The book is not modified as it is consumed. That is the no-impact
+        assumption stated on the class, and it matters more here than
+        anywhere else, in two ways. A real sweep removes the liquidity it
+        takes, so a large marketable order gets a better average price here
+        than it would have. And a remainder that rests afterwards counts the
+        levels it just consumed as still queued ahead of it, which overstates
+        the queue and therefore understates its fills — wrong, but wrong in
+        the safe direction.
+        """
+        produced: list[Fill] = []
+        for level in self.book.levels(order.side.opposite, 10_000):
+            if order.remaining == 0:
+                break
+            reaches = (
+                level.price <= order.price
+                if order.side is Side.BID
+                else level.price >= order.price
+            )
+            if not reaches:
+                break
+
+            size = min(order.remaining, level.size)
+            if size <= 0:
+                continue
+
+            order.filled += size
+            self._record(order, aggressive=True, size=size)
+            produced.append(
+                Fill(order.id, level.price, size, now_ns, aggressive=True)
+            )
+
+        if not produced:
+            return produced
+
         if order.remaining == 0:
             order.state = OrderState.FILLED
         else:
             self._rest(order)
-        self._record(order, aggressive=True, size=size)
-        return Fill(order.id, opposing, size, now_ns, aggressive=True)
+        return produced
 
     def _apply_trades(
         self, trades: tuple[Trade, ...], now_ns: int

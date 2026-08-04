@@ -126,7 +126,7 @@ is never the bottleneck when replaying a day of data.
 Run the tests:
 
 ```sh
-pytest          # 110 tests
+pytest          # 115 tests
 ```
 
 ## How it works
@@ -266,7 +266,7 @@ point. A backtest cannot, and should not pretend to.
 
 ## Testing
 
-110 tests, in three kinds.
+115 tests, in three kinds.
 
 **Differential.** The level container is checked against a deliberately naive
 implementation that sorts on every read, over 20,000 random operations. They
@@ -285,6 +285,13 @@ invariants: the book never crosses, sizes are never negative, the dictionary and
 the sorted array always agree, and no queue model returns a split the sizes
 cannot support.
 
+A marketable order sweeps every level its limit reaches, rather than taking
+the touch and resting the remainder. The earlier version left a 15-lot buy at
+105 filling only 5 against asks of 5 at 101, 5 at 102 and 5 at 103, with ten
+lots resting at 105 while the best ask was still 101 — a bid above live asks,
+which cannot exist. Sweeping also makes the cost of size visible: those fifteen
+lots average 102, not the 101 on the screen.
+
 The property tests earned their place on the first run by finding a bug I would
 not have found by hand. A trade against a single lot resting on the only level
 of a side cleared that side entirely, because the fill size was clamped with
@@ -296,9 +303,12 @@ hoping a seed rediscovers it.
 
 **No market impact.** Taking liquidity does not move the book, and our order
 does not change what anyone else does. That holds while the simulated size is
-small next to displayed depth and breaks badly when it is not. Modelling even
-crude impact would make the sweep numbers meaningfully more honest, and it is
-the first thing I would add.
+small next to displayed depth and breaks badly when it is not. It bites hardest
+on a sweep: a real one removes the liquidity it takes, so a large marketable
+order gets a better average price here than it would have, and a remainder that
+rests afterwards counts levels it just consumed as still queued ahead of it.
+That second error understates fills, which is at least the safe direction.
+Modelling even crude impact is the first thing I would add.
 
 **The synthetic venue is not a market.** It has no drift, no volatility
 clustering, no relationship between trades and the depth changes that follow
