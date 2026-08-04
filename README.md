@@ -42,6 +42,11 @@ proportional       1056     2455     853     23.2%
 optimistic         1061     2657     840     25.0%
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/queue-range-dark.svg">
+  <img alt="Fill rate under three queue assumptions on identical data: pessimistic 23.1%, proportional 23.2%, optimistic 25.0%, spanning two points the feed cannot resolve." src="docs/figures/queue-range-light.svg">
+</picture>
+
 Same market data, same strategy, same code. The only thing that changes is what
 you believe about where cancellations sat in the queue. Two percentage points of
 fill rate sits between the assumptions, and no amount of data closes the gap.

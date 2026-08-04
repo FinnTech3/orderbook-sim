@@ -37,6 +37,13 @@ jobs:
         # Guarded by a test as well; printed here so the range is visible in
         # the build log without cloning anything.
         run: obsim sweep --events 20000
+      - name: Figures regenerate identically
+        # The chart is produced by running the simulator, so a drift between
+        # a published figure and the code behind it fails here.
+        run: |
+          python3 scripts/make_figures.py
+          git diff --exit-code -- docs/figures/ \
+            || (echo "committed figures do not match regenerated output" && exit 1)
 
   benchmark:
     runs-on: ubuntu-latest
