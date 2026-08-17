@@ -25,7 +25,7 @@ def test_pessimistic_is_forced_forward_when_nothing_is_behind():
     """The case that motivates tracking both sides of the queue.
 
     An order that just joined the back of a 500-lot level has everything ahead
-    of it. If 200 cancel, all 200 came from in front — no assumption can put
+    of it. If 200 cancel, all 200 came from in front, no assumption can put
     them anywhere else.
     """
     model = PessimisticQueue()

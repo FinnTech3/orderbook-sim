@@ -5,7 +5,7 @@ occupied prices kept in ascending order. Both sides store ascending; the bid
 side reads its best from the end of the list and the ask side from the front.
 
 The list is maintained with :mod:`bisect`, so an insert is O(n) in the worst
-case because the tail has to move. That is deliberate — see the benchmark note
+case because the tail has to move. That is deliberate, see the benchmark note
 in the README. Depth updates cluster near the top of the book, so the moved
 tail is short and the move itself is one vectorised block copy rather than n
 interpreted steps.

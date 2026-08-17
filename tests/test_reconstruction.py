@@ -68,7 +68,7 @@ def test_trade_never_empties_a_side():
     The fill size was clamped with max(1, resting - 1), which for resting == 1
     still took the whole level. Found by the property test below; pinned here
     by building the exact state rather than relying on a seed to rediscover it.
-    The internals are reached into deliberately — no public API can set up a
+    The internals are reached into deliberately, no public API can set up a
     one-lot-one-level book, and that is the state that broke.
     """
     venue = SyntheticVenue(seed=0, depth=1)

@@ -41,8 +41,8 @@ class QueueModel(Protocol):
 
         ``ahead`` and ``behind`` are other participants' sizes on either side
         of us. The return value must lie within ``[max(0, cancelled - behind),
-        min(cancelled, ahead)]`` — outside that range the arithmetic does not
-        add up — and :func:`clamp` enforces exactly that.
+        min(cancelled, ahead)]``, outside that range the arithmetic does not
+        add up, and :func:`clamp` enforces exactly that.
         """
 
 

@@ -4,7 +4,7 @@
 
 An exchange publishes its order book as a snapshot plus a stream of incremental
 updates. To know what the book looked like at some past moment you have to
-replay that stream exactly — which means handling the parts that are easy to get
+replay that stream exactly, which means handling the parts that are easy to get
 wrong: sequence gaps, updates that arrive before the snapshot they apply to, and
 the fact that a "size went from 5 to 3" message does not tell you whether those
 two units were traded or cancelled.
@@ -58,7 +58,7 @@ Chosen: `dict[int, int]` mapping price ticks to size, alongside a `list[int]` of
 occupied prices kept sorted with `bisect`. Both sides store ascending; the bid
 side reads its best from the end of the array and the ask side from the front.
 
-The obvious objection is that `bisect.insort` is O(n) — it memmoves the tail of
+The obvious objection is that `bisect.insort` is O(n), it memmoves the tail of
 the list. It is chosen anyway because real depth updates cluster near the top of
 the book, so the moved tail is short, and the memmove is a single vectorised
 block copy rather than n interpreted operations. A tree gives a better
@@ -98,7 +98,7 @@ Three models, each stating its assumption:
 | `ProportionalQueue` | uniformly across the queue | shrinks in proportion to position |
 
 The default is pessimistic, because a backtest that flatters itself is worse
-than useless. Results should be quoted as a range across models — the spread
+than useless. Results should be quoted as a range across models, the spread
 between optimistic and pessimistic is the honest uncertainty in any fill
 assumption, and reporting a single number hides it.
 
@@ -123,11 +123,11 @@ match replaying straight through to T+1.
 
 ## Testing
 
-- **Unit** — each component against hand-built cases with known answers.
-- **Property (Hypothesis)** — invariants that must hold over arbitrary streams:
+- **Unit**, each component against hand-built cases with known answers.
+- **Property (Hypothesis)**, invariants that must hold over arbitrary streams:
   the book never crosses, sizes are never negative, the sorted array and the
   dictionary always agree, replay is deterministic.
-- **Differential** — the fast level structure is checked against a deliberately
+- **Differential**, the fast level structure is checked against a deliberately
   naive reference implementation over random operations. They must agree
   exactly.
 

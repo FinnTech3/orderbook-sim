@@ -42,7 +42,7 @@ class SyntheticVenue:
     seed: int = 0
     max_size: int = 500
     trade_rate: float = 0.15
-    #: Mean trade size. Deliberately far smaller than ``max_size`` — see the
+    #: Mean trade size. Deliberately far smaller than ``max_size``, see the
     #: note in :meth:`_trade`.
     mean_trade: float = 12.0
 

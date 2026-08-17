@@ -5,17 +5,17 @@ most important thing to hold onto when reading this file. Every size the feed
 reports is other participants' size only. Our order is invisible to the data,
 so on arrival it joins the back of whatever queue the feed says is there.
 
-Queue position is tracked as two numbers — how much sits ahead of us and how
-much behind — and every market event reconciles them against what the venue
+Queue position is tracked as two numbers, how much sits ahead of us and how
+much behind, and every market event reconciles them against what the venue
 reports. Trades consume from the front. Whatever change is left over is
 cancellations, and where those sat is the one thing the data cannot tell us;
 :mod:`obsim.queue_model` holds the assumptions about that.
 
 Two delays are modelled separately because they are physically different paths:
 
-- **Feed latency** — venue publishes an event, we see it some time later. The
+- **Feed latency**, venue publishes an event, we see it some time later. The
   strategy is therefore always acting on a book that has already moved.
-- **Order latency** — we decide, the venue acts on it some time later. The book
+- **Order latency**, we decide, the venue acts on it some time later. The book
   our order lands in is not the book we decided against.
 
 Ignoring either is the most common reason a backtest overstates itself.
@@ -117,7 +117,7 @@ class Simulator:
     Assumes no market impact: our order does not change what anybody else
     does, and taking liquidity does not move the book. That holds while the
     simulated size is small relative to displayed depth and breaks when it is
-    not — see the README.
+    not, see the README.
     """
 
     def __init__(
@@ -187,7 +187,7 @@ class Simulator:
 
         Cancels retire, due orders go live against the book as it stands, and
         trades work through the queue. Split out from :meth:`post_update` so
-        that something else — a :class:`~obsim.sequencing.Synchroniser` — can
+        that something else, a :class:`~obsim.sequencing.Synchroniser`, can
         own the book update in between.
         """
         produced: list[Fill] = []
@@ -263,7 +263,7 @@ class Simulator:
         why this walks levels rather than taking one.
 
         Taking only the touch left the remainder resting at the order's limit
-        price — a bid sitting above live asks, which cannot exist. A 15-lot
+        price, a bid sitting above live asks, which cannot exist. A 15-lot
         buy at 105 into asks of 5 at 101, 5 at 102 and 5 at 103 filled 5 and
         left 10 resting at 105 with the best ask still 101.
 
@@ -273,7 +273,7 @@ class Simulator:
         takes, so a large marketable order gets a better average price here
         than it would have. And a remainder that rests afterwards counts the
         levels it just consumed as still queued ahead of it, which overstates
-        the queue and therefore understates its fills — wrong, but wrong in
+        the queue and therefore understates its fills, wrong, but wrong in
         the safe direction.
         """
         produced: list[Fill] = []
@@ -370,7 +370,7 @@ class Simulator:
 
         Trades have already been taken out of the queue, so any remaining
         discrepancy is other participants joining or cancelling. Growth goes
-        behind us — new orders queue up at the back. Shrinkage is cancellation,
+        behind us, new orders queue up at the back. Shrinkage is cancellation,
         and the queue model decides how much of it came from in front.
         """
         for order in self.orders.values():

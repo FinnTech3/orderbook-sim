@@ -9,8 +9,8 @@ been filled.
 ## What this is
 
 Exchanges do not publish a picture of their order book. They publish one
-snapshot and then a firehose of small changes — "there are now 300 lots bid at
-99.85 instead of 500" — and it is up to you to keep your own copy in step. Miss
+snapshot and then a firehose of small changes, "there are now 300 lots bid at
+99.85 instead of 500", and it is up to you to keep your own copy in step. Miss
 a single message and your copy is wrong from then on, silently, with nothing to
 tell you.
 
@@ -26,7 +26,7 @@ is harder than it looks, and most backtests answer it far too generously.
 Here is the problem in one paragraph. The feed tells you the size at a price
 fell from 500 to 300. It does not tell you why. If 200 lots *traded*, they were
 taken from the front of the queue, and an order sitting near the front would
-have been filled. If 200 lots were *cancelled*, they could have been anywhere —
+have been filled. If 200 lots were *cancelled*, they could have been anywhere,
 in front of your order, in which case you moved up 200 places, or behind it, in
 which case you did not move at all. The data cannot tell these apart. Every
 backtest has to assume something, and the assumption is usually invisible and
@@ -60,7 +60,7 @@ assumption is doing more work than the strategy.
 
 I wanted to know how much difference it actually makes, and the only way to find
 out was to build the thing and measure it. For a passive quoting strategy the
-answer is a couple of points of fill rate — small enough to look like noise,
+answer is a couple of points of fill rate, small enough to look like noise,
 large enough to flip a marginal strategy from profitable to not.
 
 ## Using it
@@ -119,8 +119,8 @@ obsim bench --events 200000
 ```
 
 That is CPython with no extensions, on one core, doing the sequencing checks
-as well as the book updates. It is not fast in absolute terms — a C++ book
-does this in tens of nanoseconds — but it is fast enough that reconstruction
+as well as the book updates. It is not fast in absolute terms (a C++ book
+does this in tens of nanoseconds), but it is fast enough that reconstruction
 is never the bottleneck when replaying a day of data.
 
 Run the tests:
@@ -219,7 +219,7 @@ comes from in front of you. But an order that has just joined the back of a
 500-lot level has all 500 in front of it and nothing behind. If 200 then cancel,
 all 200 came from in front, whatever I would have preferred to assume. Returning
 zero left the order believing 500 lots were ahead of it on a level that now held
-300 — not a pessimistic estimate, an impossible one.
+300, not a pessimistic estimate, an impossible one.
 
 Each model now expresses a *preference*, and a `clamp` forces that preference
 into the range the sizes actually allow. This is why the simulator tracks size
@@ -288,7 +288,7 @@ cannot support.
 A marketable order sweeps every level its limit reaches, rather than taking
 the touch and resting the remainder. The earlier version left a 15-lot buy at
 105 filling only 5 against asks of 5 at 101, 5 at 102 and 5 at 103, with ten
-lots resting at 105 while the best ask was still 101 — a bid above live asks,
+lots resting at 105 while the best ask was still 101, a bid above live asks,
 which cannot exist. Sweeping also makes the cost of size visible: those fifteen
 lots average 102, not the 101 on the screen.
 
@@ -330,4 +330,4 @@ right tail, and the tail is where the interesting failures live.
 
 ## License
 
-MIT. Original work — see [docs/SOURCES.md](docs/SOURCES.md).
+MIT. Original work, see [docs/SOURCES.md](docs/SOURCES.md).
