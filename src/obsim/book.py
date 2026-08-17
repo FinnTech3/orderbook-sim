@@ -2,7 +2,7 @@
 
 Applies snapshots and deltas to two :class:`~obsim.levels.PriceLevels` and
 exposes the quantities strategies actually read. It knows nothing about any
-particular venue, and nothing about how the events reached it in order — that
+particular venue, and nothing about how the events reached it in order, that
 is :mod:`obsim.sequencing`'s job.
 """
 

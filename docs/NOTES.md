@@ -6,8 +6,8 @@ reasoning behind it.
 
 ## What it does
 
-Takes the two things an exchange publishes — one snapshot of the book, and a
-stream of incremental changes to it — and maintains a correct local copy. Then
+Takes the two things an exchange publishes, one snapshot of the book, and a
+stream of incremental changes to it, and maintains a correct local copy. Then
 replays that copy so a hypothetical order can be tested against it.
 
 ## The actual problem
@@ -54,7 +54,7 @@ parameter to sweep rather than a constant to bury.
 
 **Queue position needed two numbers, not one.** I started by tracking only the
 size ahead of the order, and found the pessimistic model could produce
-impossible states — more size claimed ahead than existed on the level at all.
+impossible states, more size claimed ahead than existed on the level at all.
 The split between ahead and behind is constrained by what is physically there,
 so both have to be tracked and the model's preference clamped into the feasible
 range.
@@ -67,7 +67,7 @@ ordering, and made the desync behaviour explicit rather than accidental.
 **The synthetic venue needed two corrections.** It drained to one level per side
 over a long run, because trades remove levels as well as the remove action does.
 And its trade sizes were drawn uniformly over the level, so the average trade
-consumed half the queue — in that regime queue position stops mattering and
+consumed half the queue, in that regime queue position stops mattering and
 every model agrees, which quietly destroyed the entire demonstration. Both are
 fixed, and both have regression tests.
 

@@ -82,7 +82,7 @@ class ExplicitPredecessorRule:
         if delta.prev_final_id is None:
             raise ValueError(
                 "ExplicitPredecessorRule needs prev_final_id, but the delta "
-                "did not carry one — is this feed using the right rule?"
+                "did not carry one, is this feed using the right rule?"
             )
         return delta.prev_final_id == prev_final_id
 
@@ -206,7 +206,7 @@ class Synchroniser:
         A snapshot is only usable if the buffer can be joined to it without a
         hole. If the earliest buffered delta already starts after the snapshot
         ends, messages were lost in between and no amount of replaying fixes
-        it — the snapshot is rejected and a newer one is needed.
+        it, the snapshot is rejected and a newer one is needed.
         """
         if self.state is SyncState.SYNCED:
             return True

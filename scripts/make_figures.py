@@ -34,8 +34,8 @@ class Theme:
     muted: str
     gridline: str
     baseline: str
-    #: Ordinal blue ramp, light to dark. The models are ordered — pessimistic
-    #: through optimistic — so a single hue stepped by lightness is the honest
+    #: Ordinal blue ramp, light to dark. The models are ordered, pessimistic
+    #: through optimistic, so a single hue stepped by lightness is the honest
     #: encoding. Categorical hues would imply they are unrelated categories.
     ramp: tuple[str, str, str]
     band: str

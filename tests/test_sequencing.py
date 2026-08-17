@@ -102,7 +102,7 @@ def test_gap_triggers_resync_and_clears_the_book():
     s.on_delta(delta(101, 101))
     assert s.state is SyncState.SYNCED
 
-    # 103 does not follow 101 — message 102 was lost.
+    # 103 does not follow 101, message 102 was lost.
     assert s.on_delta(delta(103, 103)) is False
     assert s.state is SyncState.BUFFERING
     assert s.book.best_bid is None

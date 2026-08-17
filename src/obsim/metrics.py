@@ -20,7 +20,7 @@ def spread_ticks(book: OrderBook) -> int | None:
 def spread_bps(book: OrderBook) -> Decimal | None:
     """Spread as basis points of the midpoint.
 
-    The comparable measure across instruments — a one-tick spread means
+    The comparable measure across instruments, a one-tick spread means
     something different on a $2 stock than on a $60,000 future.
     """
     spread, mid = book.spread, book.mid
@@ -81,7 +81,7 @@ def sweep(book: OrderBook, side: Side, quantity: int) -> SweepResult:
     """Walk one side of the book to fill ``quantity``.
 
     ``side`` is the side being *consumed*: pass ASK to price a buy, BID to
-    price a sell. Assumes no market impact beyond the displayed depth — the
+    price a sell. Assumes no market impact beyond the displayed depth, the
     book does not refresh as it is eaten, which understates the true cost of
     any size large enough to be noticed.
     """

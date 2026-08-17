@@ -183,7 +183,7 @@ def test_the_queue_model_decides_whether_we_fill():
     """Identical market data, opposite outcomes. This is the whole point.
 
     The feed cannot say whether the 500 lots that vanished were in front of us
-    or behind us, so the assumption — not the data — determines the fill.
+    or behind us, so the assumption, not the data, determines the fill.
     """
     stream = [
         (evt(1, bids=[(100, 500)]), ()),
@@ -233,7 +233,7 @@ def test_order_latency_delays_going_live():
 
 
 def test_a_pending_order_misses_a_trade_it_would_have_caught():
-    """Latency is not cosmetic — it changes which fills happen."""
+    """Latency is not cosmetic, it changes which fills happen."""
     quick = make_sim(order_latency_ns=0)
     slow = make_sim(order_latency_ns=5_000)
 
@@ -344,7 +344,7 @@ def test_a_marketable_order_sweeps_every_level_it_reaches():
 
     A limit buy at 105 into asks of 5 at 101, 5 at 102 and 5 at 103 should
     fill all fifteen. Taking only the touch filled five and left ten resting
-    at 105 — a bid above live asks, which cannot exist in a real book.
+    at 105, a bid above live asks, which cannot exist in a real book.
     """
     sim = make_sim(asks=((101, 5), (102, 5), (103, 5)))
     order = sim.submit(Side.BID, 105, 15, now_ns=0)

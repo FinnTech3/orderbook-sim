@@ -1,6 +1,6 @@
 """Smoke tests for the command line entry point.
 
-Small event counts — these check the commands run end to end and report
+Small event counts, these check the commands run end to end and report
 success, not that the numbers are right. Correctness lives in the other files.
 """
 
@@ -45,7 +45,7 @@ def test_queue_models_still_disagree():
 
     Every other test checks a component in isolation, and all of them would
     still pass if a refactor made the three queue models produce identical
-    fills — at which point the project's entire claim would be silently dead.
+    fills, at which point the project's entire claim would be silently dead.
     This asserts the range is real: optimistic must fill more than pessimistic
     on the same stream.
     """
@@ -60,7 +60,7 @@ def test_queue_models_still_disagree():
     high = _run(OptimisticQueue(), **common).sim.stats.fill_ratio
 
     assert high > low, (
-        f"queue models agree (both {low:.3%}) — the assumption is no longer "
+        f"queue models agree (both {low:.3%}), the assumption is no longer "
         f"changing the outcome, so the demonstration is broken"
     )
 
